@@ -35,6 +35,10 @@ public:
 		TestTokenizer();
 		TestTokenizer2();
 		TestXpressive();
+		TestXpressiveRegexSearch();
+		TestXpressiveRegexReplace();
+		TestXpressiveRegexIterator();
+		TestXpressiveRegexTokenIterator();
 	}
 private:
 	template <typename T>
@@ -246,6 +250,76 @@ private:
 //		assert(regex_match("a-b", creg));
 		assert(!regex_match("ac", creg));
 		assert(!regex_match("abd", creg));
+
+		cregex reg = cregex::compile("\\d{6}(1|2)\\d{3}(0|1)\\d[0-3]\\d\\d{3}(X|\\d)", boost::xpressive::icase);
+		assert(regex_match("330683198802104116", reg));
+	}
+	void  TestXpressiveRegexSearch()
+	{
+		using namespace boost::xpressive; 
+		char *str = "there is a POWER-suit item";
+		cregex reg = cregex::compile("(power)-(.{4})", icase);
+		assert(regex_search(str, reg));
+		
+		cmatch what;
+		regex_search(str, what, reg);
+		assert(what.size() == 3);
+		cout << what[1] << what[2] << endl;
+		assert(!regex_search("error message", reg));
+	}
+
+	void  TestXpressiveRegexReplace()
+	{
+		using namespace boost::xpressive; 
+		string str("readme.txt");
+		sregex reg1 = sregex::compile("(.*)(me)");
+		sregex reg2 = sregex::compile("(t)(.)(t)");
+
+		cout << regex_replace(str, reg1, "manual") << endl;
+		cout << regex_replace(str, reg1, "$1you") << endl;
+		cout << regex_replace(str, reg1, "$&$&") << endl;
+		cout << regex_replace(str, reg2, "$1N$3") << endl;
+
+		str = regex_replace(str, reg2, "$1$3");
+		cout << str << endl;
+	}
+
+	void TestXpressiveRegexIterator()
+	{
+		using namespace boost::xpressive; 
+		string str("Power-bomb, power-suit, pOWer-bean all items\n");
+		sregex reg = sregex::compile("power-(\\w{4})", boost::xpressive::icase);
+		sregex_iterator pos(str.begin(), str.end(), reg);
+		sregex_iterator end;
+		while(pos != end)
+		{
+			cout << "[" << (*pos)[0] << "]";
+			++pos;
+		}
+		cout << endl;
+	}
+	void TestXpressiveRegexTokenIterator()
+	{
+		using namespace boost::xpressive; 
+		char *str = "*Link*||+Mario+||Zelda!!!||Metroid";
+		//查找所有的单词，无视标点符号
+		cregex reg = cregex::compile("\\w+");
+		boost::xpressive::cregex_token_iterator pos(str, str+strlen(str), reg);
+		while(pos != cregex_token_iterator())
+		{
+			cout << "[" << *pos << "]";
+			++pos;
+		}
+		cout << endl;
+
+		cregex spilt_reg = cregex::compile("\\|\\|");
+		boost::xpressive::cregex_token_iterator pos2(str, str+strlen(str), spilt_reg, -1);
+		while(pos2 != cregex_token_iterator())
+		{
+			cout << "[" << *pos2 << "]";
+			++pos2;
+		}
+		cout << endl;
 	}
 };
 
